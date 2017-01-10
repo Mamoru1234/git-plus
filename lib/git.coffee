@@ -128,6 +128,7 @@ module.exports = git =
           resolve(repos[0])
 
   getRepoForPath: (path) ->
+    console.log "Git-plus: the path selected in the tree-view is #{path}"
     if not path?
       Promise.reject "No file to find repository for"
     else
@@ -137,10 +138,14 @@ module.exports = git =
           .map(atom.project.repositoryForDirectory.bind(atom.project))
 
         Promise.all(repoPromises).then (repos) ->
+          console.log "Git-plus: repositories in project:"
           repos.forEach (repo) ->
+            console.log repo
             if repo? and (new Directory(repo.getWorkingDirectory())).contains path
               submodule = repo?.repo.submoduleForPath(path)
               if submodule? then resolve(submodule) else resolve(repo)
+            else
+              console.log "Git-plus: No repository found for #{path}"
 
   getSubmodule: (path) ->
     path ?= atom.workspace.getActiveTextEditor()?.getPath()
