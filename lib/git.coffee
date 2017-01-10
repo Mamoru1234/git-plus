@@ -137,6 +137,10 @@ module.exports = git =
           atom.project.getDirectories()
           .map(atom.project.repositoryForDirectory.bind(atom.project))
 
+        console.log "Git-plus: directories in project:"
+        atom.project.getDirectories().map((directory) -> directory.path).forEach (directory) ->
+          console.log "#{directory}\n"
+
         Promise.all(repoPromises).then (repos) ->
           console.log "Git-plus: repositories in project:"
           repos.forEach (repo) ->
