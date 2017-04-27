@@ -93,6 +93,70 @@ onPathsChanged = (gp) ->
 module.exports =
   config: configurations
 
+  commands:
+    'atom-workspace':
+      'git-plus:menu': -> new GitPaletteView(),
+      'git-plus:add': -> git.getRepo().then((repo) -> git.add(repo, file: currentFile(repo))),
+      'git-plus:add-modified': -> git.getRepo().then((repo) -> git.add(repo, update: true)),
+      'git-plus:add-all':  -> git.getRepo().then((repo) -> git.add(repo)),
+      'git-plus:commit': -> git.getRepo().then((repo) -> GitCommit(repo)),
+      'git-plus:commit-all': -> git.getRepo().then((repo) -> GitCommit(repo, stageChanges: true)),
+      'git-plus:commit-amend': -> git.getRepo().then((repo) -> new GitCommitAmend(repo)),
+      'git-plus:add-and-commit': -> git.getRepo().then((repo) -> git.add(repo, file: currentFile(repo)).then -> GitCommit(repo)),
+      'git-plus:add-and-commit-and-push': -> git.getRepo().then((repo) -> git.add(repo, file: currentFile(repo)).then -> GitCommit(repo, andPush: true))
+      'git-plus:add-all-and-commit': -> git.getRepo().then((repo) -> git.add(repo).then -> GitCommit(repo)),
+      'git-plus:add-all-commit-and-push': -> git.getRepo().then((repo) -> git.add(repo).then -> GitCommit(repo, andPush: true)),
+      'git-plus:commit-all-and-push': -> git.getRepo().then((repo) -> GitCommit(repo, stageChanges: true, andPush: true)),
+      'git-plus:checkout': -> git.getRepo().then((repo) -> GitCheckoutBranch(repo)),
+      'git-plus:checkout-remote': -> git.getRepo().then((repo) -> GitCheckoutBranch(repo, {remote: true})),
+      'git-plus:checkout-current-file': -> git.getRepo().then((repo) -> GitCheckoutFile(repo, file: currentFile(repo))),
+      'git-plus:checkout-all-files': -> git.getRepo().then((repo) -> GitCheckoutAllFiles(repo)),
+      'git-plus:new-branch': -> git.getRepo().then((repo) -> GitCheckoutNewBranch(repo)),
+      'git-plus:delete-local-branch': -> git.getRepo().then((repo) -> GitDeleteBranch(repo)),
+      'git-plus:delete-remote-branch': -> git.getRepo().then((repo) -> GitDeleteBranch(repo, {remote: true})),
+      'git-plus:cherry-pick': -> git.getRepo().then((repo) -> GitCherryPick(repo)),
+      'git-plus:diff': -> git.getRepo().then((repo) -> GitDiff(repo, file: currentFile(repo))),
+      'git-plus:difftool': -> git.getRepo().then((repo) -> GitDifftool(repo, file: currentFile(repo))),
+      'git-plus:diff-all': -> git.getRepo().then((repo) -> GitDiffAll(repo)),
+      'git-plus:fetch': -> git.getRepo().then((repo) -> GitFetch(repo)),
+      'git-plus:fetch-all': -> git.getAllRepos().then((repos) -> GitFetchAll(repos)),
+      'git-plus:fetch-prune': -> git.getRepo().then((repo) -> GitFetchPrune(repo)),
+      'git-plus:pull': -> git.getRepo().then((repo) -> GitPull(repo)),
+      'git-plus:push': -> git.getRepo().then((repo) -> GitPush(repo)),
+      'git-plus:push-set-upstream': -> git.getRepo().then((repo) -> GitPush(repo, setUpstream: true)),
+      'git-plus:remove': -> git.getRepo().then((repo) -> GitRemove(repo, showSelector: true)),
+      'git-plus:remove-current-file': -> git.getRepo().then((repo) -> GitRemove(repo)),
+      'git-plus:reset': -> git.getRepo().then((repo) -> git.reset(repo)),
+      'git-plus:show': -> git.getRepo().then((repo) -> GitShow(repo)),
+      'git-plus:log': -> git.getRepo().then((repo) -> GitLog(repo)),
+      'git-plus:log-current-file': -> git.getRepo().then((repo) -> GitLog(repo, onlyCurrentFile: true)),
+      'git-plus:stage-hunk': -> git.getRepo().then((repo) -> GitStageHunk(repo)),
+      'git-plus:stash-save': -> git.getRepo().then((repo) -> GitStashSave(repo)),
+      'git-plus:stash-save-message': -> git.getRepo().then((repo) -> GitStashSaveMessage(repo)),
+      'git-plus:stash-pop': -> git.getRepo().then((repo) -> GitStashPop(repo)),
+      'git-plus:stash-apply': -> git.getRepo().then((repo) -> GitStashApply(repo)),
+      'git-plus:stash-delete': -> git.getRepo().then((repo) -> GitStashDrop(repo)),
+      'git-plus:status': -> git.getRepo().then((repo) -> GitStatus(repo)),
+      'git-plus:tags': -> git.getRepo().then((repo) -> GitTags(repo)),
+      'git-plus:run': -> git.getRepo().then((repo) -> new GitRun(repo)),
+      'git-plus:merge': -> git.getRepo().then((repo) -> GitMerge(repo)),
+      'git-plus:merge-remote': -> git.getRepo().then((repo) -> GitMerge(repo, remote: true)),
+      'git-plus:merge-no-fast-forward': -> git.getRepo().then((repo) -> GitMerge(repo, noFastForward: true)),
+      'git-plus:rebase': -> git.getRepo().then((repo) -> GitRebase(repo)),
+      'git-plus:git-open-changed-files': -> git.getRepo().then((repo) -> GitOpenChangedFiles(repo))
+    '.tree-view':
+      'git-plus-context:add': -> GitAddContext(),
+      'git-plus-context:add-and-commit': -> GitAddAndCommitContext(),
+      'git-plus-context:checkout-file': -> GitCheckoutFileContext(),
+      'git-plus-context:diff': -> GitDiffContext(),
+      'git-plus-context:diff-branches': GitDiffBranchesContext,
+      'git-plus-context:diff-branch-files': GitDiffBranchFilesContext,
+      'git-plus-context:difftool': -> GitDifftoolContext(),
+      'git-plus-context:pull': -> GitPullContext(),
+      'git-plus-context:push': -> GitPushContext(),
+      'git-plus-context:push-set-upstream': -> GitPushContext(setUpstream: true),
+      'git-plus-context:unstage-file': -> GitUnstageFileContext()
+
   subscriptions: null
 
   workspace: document.querySelector('atom-workspace')
@@ -100,6 +164,7 @@ module.exports =
   provideService: -> require './service'
 
   activate: (state) ->
+    console.log @commands
     setDiffGrammar()
     @subscriptions = new CompositeDisposable
     repos = getWorkspaceRepos()
@@ -110,69 +175,12 @@ module.exports =
     if repos.length > 0
       atom.project.onDidChangePaths (paths) => onPathsChanged(this)
       contextMenu()
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:menu', -> new GitPaletteView()
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add', -> git.getRepo().then((repo) -> git.add(repo, file: currentFile(repo)))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-modified', -> git.getRepo().then((repo) -> git.add(repo, update: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-all', -> git.getRepo().then((repo) -> git.add(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:commit', -> git.getRepo().then((repo) -> GitCommit(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:commit-all', -> git.getRepo().then((repo) -> GitCommit(repo, stageChanges: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:commit-amend', -> git.getRepo().then((repo) -> new GitCommitAmend(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-and-commit', -> git.getRepo().then((repo) -> git.add(repo, file: currentFile(repo)).then -> GitCommit(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-and-commit-and-push', -> git.getRepo().then((repo) -> git.add(repo, file: currentFile(repo)).then -> GitCommit(repo, andPush: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-all-and-commit', -> git.getRepo().then((repo) -> git.add(repo).then -> GitCommit(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:add-all-commit-and-push', -> git.getRepo().then((repo) -> git.add(repo).then -> GitCommit(repo, andPush: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:commit-all-and-push', -> git.getRepo().then((repo) -> GitCommit(repo, stageChanges: true, andPush: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:checkout', -> git.getRepo().then((repo) -> GitCheckoutBranch(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:checkout-remote', -> git.getRepo().then((repo) -> GitCheckoutBranch(repo, {remote: true}))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:checkout-current-file', -> git.getRepo().then((repo) -> GitCheckoutFile(repo, file: currentFile(repo)))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:checkout-all-files', -> git.getRepo().then((repo) -> GitCheckoutAllFiles(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:new-branch', -> git.getRepo().then((repo) -> GitCheckoutNewBranch(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:delete-local-branch', -> git.getRepo().then((repo) -> GitDeleteBranch(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:delete-remote-branch', -> git.getRepo().then((repo) -> GitDeleteBranch(repo, {remote: true}))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:cherry-pick', -> git.getRepo().then((repo) -> GitCherryPick(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:diff', -> git.getRepo().then((repo) -> GitDiff(repo, file: currentFile(repo)))
+      for scopeName, scope of @commands
+        for commandName, command of scope
+          @subscriptions.add atom.commands.add scopeName, commandName, command
       if atom.config.get('git-plus.experimental.diffBranches')
         @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:diff-branches', -> git.getRepo().then((repo) -> GitDiffBranches(repo))
         @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:diff-branch-files', -> git.getRepo().then((repo) -> GitDiffBranchFiles(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:difftool', -> git.getRepo().then((repo) -> GitDifftool(repo, file: currentFile(repo)))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:diff-all', -> git.getRepo().then((repo) -> GitDiffAll(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:fetch', -> git.getRepo().then((repo) -> GitFetch(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:fetch-all', -> git.getAllRepos().then((repos) -> GitFetchAll(repos))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:fetch-prune', -> git.getRepo().then((repo) -> GitFetchPrune(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:pull', -> git.getRepo().then((repo) -> GitPull(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:push', -> git.getRepo().then((repo) -> GitPush(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:push-set-upstream', -> git.getRepo().then((repo) -> GitPush(repo, setUpstream: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:remove', -> git.getRepo().then((repo) -> GitRemove(repo, showSelector: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:remove-current-file', -> git.getRepo().then((repo) -> GitRemove(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:reset', -> git.getRepo().then((repo) -> git.reset(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:show', -> git.getRepo().then((repo) -> GitShow(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:log', -> git.getRepo().then((repo) -> GitLog(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:log-current-file', -> git.getRepo().then((repo) -> GitLog(repo, onlyCurrentFile: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:stage-hunk', -> git.getRepo().then((repo) -> GitStageHunk(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:stash-save', -> git.getRepo().then((repo) -> GitStashSave(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:stash-save-message', -> git.getRepo().then((repo) -> GitStashSaveMessage(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:stash-pop', -> git.getRepo().then((repo) -> GitStashPop(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:stash-apply', -> git.getRepo().then((repo) -> GitStashApply(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:stash-delete', -> git.getRepo().then((repo) -> GitStashDrop(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:status', -> git.getRepo().then((repo) -> GitStatus(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:tags', -> git.getRepo().then((repo) -> GitTags(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:run', -> git.getRepo().then((repo) -> new GitRun(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:merge', -> git.getRepo().then((repo) -> GitMerge(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:merge-remote', -> git.getRepo().then((repo) -> GitMerge(repo, remote: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:merge-no-fast-forward', -> git.getRepo().then((repo) -> GitMerge(repo, noFastForward: true))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:rebase', -> git.getRepo().then((repo) -> GitRebase(repo))
-      @subscriptions.add atom.commands.add 'atom-workspace', 'git-plus:git-open-changed-files', -> git.getRepo().then((repo) -> GitOpenChangedFiles(repo))
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:add', -> GitAddContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:add-and-commit', -> GitAddAndCommitContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:checkout-file', -> GitCheckoutFileContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:diff', -> GitDiffContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:diff-branches', GitDiffBranchesContext
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:diff-branch-files', GitDiffBranchFilesContext
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:difftool', -> GitDifftoolContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:pull', -> GitPullContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:push', -> GitPushContext()
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:push-set-upstream', -> GitPushContext(setUpstream: true)
-      @subscriptions.add atom.commands.add '.tree-view', 'git-plus-context:unstage-file', -> GitUnstageFileContext()
       @subscriptions.add atom.config.observe 'git-plus.diffs.syntaxHighlighting', setDiffGrammar
       @subscriptions.add atom.config.observe 'git-plus.diffs.wordDiff', setDiffGrammar
       if atom.config.get('git-plus.experimental.stageFilesBeta')
